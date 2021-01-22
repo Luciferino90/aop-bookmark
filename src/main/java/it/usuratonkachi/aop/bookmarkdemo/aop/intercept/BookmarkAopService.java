@@ -90,15 +90,10 @@ public class BookmarkAopService {
                                 .filter(bookmark -> isRightStepOrder(bookmark, dataType, bookmarkName))
                                 .filter(bookmark -> isNotBlockingError(bookmark, bookmarkName))
                                 .filter(bookmark -> checkBookmarkFilter(bookmark, wrapperContext, bookmarkName))
-                                .map(bookmark -> {
-                                    if (bookmark instanceof IAlteringAndFilteringBookmarkData) {
-                                        ((IAlteringAndFilteringBookmarkData) bookmark).alter(wrapperContext);
-                                    }
-                                    return bookmark;
-                                })
+                                .map(bookmark -> bookmark.alter(wrapperContext))
                                 .map(bookmark ->
                                     ReflectionUtils.methodCall(joinPoint)
-                                        .doOnNext(bookmark::updateBookmark)
+                                        .doOnNext(result -> bookmark.updateBookmark(result, bookmarkName, dataType))
                                         .doOnNext(result -> bookmarkService.saveBookmark(result, bookmarkName, dataType, null))
                                         .map(e -> e)
                                 )

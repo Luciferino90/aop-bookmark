@@ -33,7 +33,9 @@ public class RedisService extends BookmarkService {
     @Override
     public Bookmark saveBookmark(WrapperContext wrapperContext, String bookmarkName, Class<?> dataType, BookmarkException bookmarkException) {
         Bookmark bookmark = BookmarkUtils.generateBookmark(wrapperContext, bookmarkName, dataType, bookmarkException);
-        return bookmarkRepository.save(bookmark);
+        Bookmark bookmark1 = bookmarkRepository.save(bookmark);
+        Optional<Bookmark> b = getBookmark(wrapperContext);
+        return bookmark1;
     }
 
 

@@ -57,6 +57,7 @@ public class FilesystemService extends BookmarkService {
         try (FileOutputStream file = new FileOutputStream(filePath.toString())) {
             try (ObjectOutputStream out = new ObjectOutputStream(file)) {
                 out.writeObject(bookmark);
+                Optional<Bookmark> b = getBookmark(wrapperContext);
                 return bookmark;
             }
         } catch (IOException ex){

@@ -1,7 +1,6 @@
 package it.usuratonkachi.aop.bookmarkdemo.bookmark.step;
 
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.IBookmarkData;
-import it.usuratonkachi.aop.bookmarkdemo.bookmark.IFilteringBookmarkData;
 import it.usuratonkachi.aop.bookmarkdemo.context.WrapperContext;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +12,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Step3_FetchResultAndSave implements IFilteringBookmarkData {
+public class Step3_FetchResultAndSave implements IBookmarkData {
 
     private Map<String, Nested> testObject = Map.of("One", new Nested(), "Two" ,new Nested());
 
@@ -35,8 +34,14 @@ public class Step3_FetchResultAndSave implements IFilteringBookmarkData {
     }
 
     @Override
-    public IBookmarkData updateBookmark(WrapperContext wrapperContext) {
+    public IBookmarkData updateBookmark(WrapperContext wrapperContext, String bookmarkName, Class<?> dataType) {
+        Step3_FetchResultAndSave bookmark = new Step3_FetchResultAndSave();
         return this;
+    }
+
+    @Override
+    public WrapperContext alter(WrapperContext wrapperContext) {
+        return wrapperContext;
     }
 
 }
