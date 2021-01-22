@@ -1,24 +1,18 @@
 package it.usuratonkachi.aop.bookmarkdemo.utils;
 
-import it.usuratonkachi.aop.bookmarkdemo.aop.annotation.Bookmarkable;
-import it.usuratonkachi.aop.bookmarkdemo.bookmark.Bookmark;
-import it.usuratonkachi.aop.bookmarkdemo.bookmark.BookmarkError;
-import it.usuratonkachi.aop.bookmarkdemo.bookmark.Metadata;
 import it.usuratonkachi.aop.bookmarkdemo.context.WrapperContext;
 import it.usuratonkachi.aop.bookmarkdemo.exception.BlockingException;
-import it.usuratonkachi.aop.bookmarkdemo.exception.BookmarkException;
 import lombok.experimental.UtilityClass;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
-
-import java.lang.reflect.Method;
+import reactor.core.publisher.Mono;
 
 @UtilityClass
 public class ReflectionUtils {
 
-    public Object methodCall(ProceedingJoinPoint joinPoint) {
+    @SuppressWarnings("unchecked")
+    public Mono<WrapperContext> methodCall(ProceedingJoinPoint joinPoint) {
         try {
-            return joinPoint.proceed();
+            return ((Mono<WrapperContext>)joinPoint.proceed());
         } catch (Throwable throwable) {
             if (throwable instanceof RuntimeException)
                 throw (RuntimeException)throwable;

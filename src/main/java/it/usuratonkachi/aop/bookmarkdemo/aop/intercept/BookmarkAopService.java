@@ -24,6 +24,7 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.Objects;
@@ -68,7 +69,7 @@ public class BookmarkAopService {
         Bookmarkable bookmarkable = BookmarkUtils.getBookmarkAnnnotation(joinPoint);
         Class<?> dataType = bookmarkable.bookmarkJavaType();
 
-        return Optional.ofNullable(joinPoint.getArgs())
+        return Mono.justOrEmpty(Optional.ofNullable(joinPoint.getArgs()))
                 .filter(args -> args.length > 0)
                 .map(args -> args[0])
                 .filter(obj -> obj instanceof WrapperContext)
@@ -95,15 +96,16 @@ public class BookmarkAopService {
                                     }
                                     return bookmark;
                                 })
-                                .map(bookmark -> {
-                                    WrapperContext result = (WrapperContext) ReflectionUtils.methodCall(joinPoint);
-                                    bookmark.updateBookmark(result);
-                                    bookmarkService.saveBookmark(result, bookmarkName, dataType, null);
-                                    return result;
-                                })
+                                .map(bookmark ->
+                                    ReflectionUtils.methodCall(joinPoint)
+                                        .doOnNext(bookmark::updateBookmark)
+                                        .doOnNext(result -> bookmarkService.saveBookmark(result, bookmarkName, dataType, null))
+                                        .map(e -> e)
+                                )
                                 // Nosense, checked notnull condition at 42-44
-                )
-                .orElseGet(() -> (WrapperContext)Objects.requireNonNull(joinPoint.getArgs())[0]);
+                                .orElseGet(() -> Mono.justOrEmpty((WrapperContext)Objects.requireNonNull(joinPoint.getArgs())[0]))
+                                .doOnError(BookmarkException.class, e -> bookmarkService.saveBookmark(wrapperContext, bookmarkName, dataType, e))
+                );
     }
 
     public boolean isRightStepOrder(Bookmark bookmark, Class<?> actualDatatypeAnnotation, String bookmarkName) {

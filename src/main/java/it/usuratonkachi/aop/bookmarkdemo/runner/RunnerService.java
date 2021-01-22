@@ -16,9 +16,9 @@ public class RunnerService {
 
     public Mono<WrapperContext> runCleverBoy(String address) {
         return Mono.just(WrapperContext.factory(address))
-                .map(stepService::step1_filtering)
-                .map(stepService::step2_modifying)
-                .map(stepService::step3_fetchResultAndSave);
+                .flatMap(stepService::step1_filtering)
+                .flatMap(stepService::step2_modifying)
+                .flatMap(stepService::step3_fetchResultAndSave);
     }
 
 }
