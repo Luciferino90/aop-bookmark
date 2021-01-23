@@ -4,31 +4,29 @@ import it.usuratonkachi.aop.bookmarkdemo.bookmark.Bookmark;
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.BookmarkError;
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.IBookmarkData;
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.Metadata;
-import it.usuratonkachi.aop.bookmarkdemo.context.BookmarkStatus;
 import it.usuratonkachi.aop.bookmarkdemo.context.Envelope;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.Optional;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
-public class Step1_Filtering implements IBookmarkData<Step1_Filtering> {
+public class Step2_Date implements IBookmarkData<Step2_Date> {
 
-    private String testString = "testString";
+    private ZonedDateTime date = ZonedDateTime.now();
 
-    public static Bookmark<Step1_Filtering> createBookmarkData() {
-        return Bookmark.<Step1_Filtering>builder()
+    public static Bookmark<Step2_Date> createBookmarkData() {
+        return Bookmark.<Step2_Date>builder()
                 .id(UUID.randomUUID().toString())
-                .bookmarkStatus(BookmarkStatus.TODO)
                 .meta(Metadata.builder()
-                        .bookmarkName(Step1_Filtering.class.getName())
-                        .dataType(Step1_Filtering.class)
+                        .bookmarkName(Step2_Date.class.getName())
+                        .dataType(Step2_Date.class)
                         .build())
                 .error(BookmarkError.generateError(null))
-                .data(new Step1_Filtering())
+                .data(new Step2_Date())
                 .build();
     }
 

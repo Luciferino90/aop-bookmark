@@ -10,6 +10,6 @@ import java.io.Serializable;
 public class Metadata implements Serializable {
 
     private String bookmarkName;
-    private String dataType;
+    private Class<?> dataType;
 
 }

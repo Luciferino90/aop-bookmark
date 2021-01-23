@@ -1,6 +1,8 @@
 package it.usuratonkachi.aop.bookmarkdemo.bookmark.service;
 
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.Bookmark;
+import it.usuratonkachi.aop.bookmarkdemo.bookmark.BookmarkError;
+import it.usuratonkachi.aop.bookmarkdemo.bookmark.IBookmarkData;
 import it.usuratonkachi.aop.bookmarkdemo.context.Envelope;
 import it.usuratonkachi.aop.bookmarkdemo.exception.BookmarkException;
 import it.usuratonkachi.aop.bookmarkdemo.exception.RetrievableException;
@@ -16,7 +18,7 @@ import java.util.Optional;
 
 @Service
 @ConditionalOnProperty(prefix = "bookmark", value = "mode", havingValue = "fs", matchIfMissing = true)
-public class FilesystemService extends BookmarkService {
+public class FilesystemService<T extends IBookmarkData<T>> extends BookmarkService<T> {
 
     @Value("${bookmark.root.folder}")
     private Path bookmarkRootFolder;
@@ -28,11 +30,12 @@ public class FilesystemService extends BookmarkService {
     }
 
     @Override
-    public Optional<Bookmark> getBookmark(Envelope wrapperContext) {
+    @SuppressWarnings("unchecked")
+    public Optional<Bookmark<T>> getBookmark(Envelope wrapperContext) {
         String filename = bookmarkRootFolder.resolve(wrapperContext.getAddress()).resolve(wrapperContext.getId()).toString();
         try (FileInputStream file = new FileInputStream(filename)) {
             try (ObjectInputStream in = new ObjectInputStream(file)) {
-                return Optional.ofNullable((Bookmark) in.readObject());
+                return Optional.ofNullable((Bookmark<T>) in.readObject());
             }
         } catch (FileNotFoundException fnfe) {
             return Optional.empty();
@@ -41,16 +44,14 @@ public class FilesystemService extends BookmarkService {
         }
     }
 
-    @Override
-    public Bookmark saveBookmark(Envelope wrapperContext, String bookmarkName, Class<?> dataType) {
-        return saveBookmark(wrapperContext, bookmarkName, dataType, null);
+    public Bookmark<T> saveBookmark(Envelope envelope, Bookmark<T> bookmark) {
+        return saveBookmark(envelope, bookmark, null);
     }
 
     @Override
-    public Bookmark saveBookmark(Envelope wrapperContext, String bookmarkName, Class<?> dataType, BookmarkException bookmarkException) {
-        Bookmark bookmark = BookmarkUtils.generateBookmark(wrapperContext, bookmarkName, dataType, bookmarkException);
-        Path filePath = bookmarkRootFolder.resolve(wrapperContext.getAddress()).resolve(wrapperContext.getId());
-
+    public Bookmark<T> saveBookmark(Envelope envelope, Bookmark<T> bookmark, BookmarkException bookmarkException) {
+        bookmark.setError(BookmarkError.generateError(bookmarkException));
+        Path filePath = bookmarkRootFolder.resolve(envelope.getAddress()).resolve(envelope.getId());
         if (!filePath.getParent().toFile().exists() && !filePath.getParent().toFile().mkdirs())
             throw new RetrievableException(new RuntimeException("Cannot create bookmark dirs!"));
 
@@ -63,5 +64,4 @@ public class FilesystemService extends BookmarkService {
             throw new RetrievableException(ex);
         }
     }
-
 }
