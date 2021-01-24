@@ -8,12 +8,12 @@ import java.util.Map;
 
 public class BookmapFactory {
 
-    public static Map<String, Bookmark<? extends IBookmarkData<? extends IBookmarkData<?>>>> create() {
+    public static Map<String, Bookmark<? extends IBookmarkData<? extends IBookmarkData<?>>>> create(String messageId) {
         return new HashMap<>(
                 Map.of(
-                        Step1_Filtering.class.getName(), Step1_Filtering.createBookmarkData(),
-                        Step2_Date.class.getName(), Step2_Date.createBookmarkData(),
-                        Step3_Object.class.getName(), Step3_Object.createBookmarkData()
+                        Step1_Filtering.class.getName(), Step1_Filtering.createBookmarkData(messageId),
+                        Step2_Date.class.getName(), Step2_Date.createBookmarkData(messageId),
+                        Step3_Object.class.getName(), Step3_Object.createBookmarkData(messageId)
                 )
         );
     }

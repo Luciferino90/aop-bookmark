@@ -6,6 +6,7 @@ spring:
     host: localhost
     password:
     port: 6379
+    ttl: 60 # seconds
 
 bookmark:
   mode: fs # fs and omitted for filesystem, otherwise redis
@@ -13,3 +14,5 @@ bookmark:
     folder: /tmp/bookmark/demo
   maxRetry: 3
 
+# FS 33 SEC
+# REDIS 229 SEC

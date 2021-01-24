@@ -5,11 +5,12 @@ import it.usuratonkachi.aop.bookmarkdemo.bookmark.BookmarkError;
 import it.usuratonkachi.aop.bookmarkdemo.bookmark.IBookmarkData;
 import it.usuratonkachi.aop.bookmarkdemo.context.Envelope;
 import it.usuratonkachi.aop.bookmarkdemo.exception.BookmarkException;
-import it.usuratonkachi.aop.bookmarkdemo.exception.RetrievableException;
-import it.usuratonkachi.aop.bookmarkdemo.utils.BookmarkUtils;
+import it.usuratonkachi.aop.bookmarkdemo.exception.RetryableException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.util.FileSystemUtils;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.io.*;
@@ -29,10 +30,14 @@ public class FilesystemService<T extends IBookmarkData<T>> extends BookmarkServi
             throw new RuntimeException("Cannot create root folder at " + bookmarkRootFolder);
     }
 
+    protected Path calculateFilename(Envelope envelope, Class<?> dataType) {
+        return bookmarkRootFolder.resolve(envelope.getAddress()).resolve(envelope.getId()).resolve(dataType.getName());
+    }
+
     @Override
     @SuppressWarnings("unchecked")
-    public Optional<Bookmark<T>> getBookmark(Envelope wrapperContext) {
-        String filename = bookmarkRootFolder.resolve(wrapperContext.getAddress()).resolve(wrapperContext.getId()).toString();
+    public Optional<Bookmark<T>> getBookmark(Envelope envelope, Class<T> dataType) {
+        String filename = calculateFilename(envelope, dataType).toString();
         try (FileInputStream file = new FileInputStream(filename)) {
             try (ObjectInputStream in = new ObjectInputStream(file)) {
                 return Optional.ofNullable((Bookmark<T>) in.readObject());
@@ -40,7 +45,7 @@ public class FilesystemService<T extends IBookmarkData<T>> extends BookmarkServi
         } catch (FileNotFoundException fnfe) {
             return Optional.empty();
         } catch (ClassNotFoundException | IOException ex){
-            throw new RetrievableException(ex);
+            throw new RetryableException(ex);
         }
     }
 
@@ -50,10 +55,10 @@ public class FilesystemService<T extends IBookmarkData<T>> extends BookmarkServi
 
     @Override
     public Bookmark<T> saveBookmark(Envelope envelope, Bookmark<T> bookmark, BookmarkException bookmarkException) {
+        Path filePath = calculateFilename(envelope, bookmark.getData().getClass());
         bookmark.setError(BookmarkError.generateError(bookmarkException));
-        Path filePath = bookmarkRootFolder.resolve(envelope.getAddress()).resolve(envelope.getId());
         if (!filePath.getParent().toFile().exists() && !filePath.getParent().toFile().mkdirs())
-            throw new RetrievableException(new RuntimeException("Cannot create bookmark dirs!"));
+            throw new RetryableException(new RuntimeException("Cannot create bookmark dirs!"));
 
         try (FileOutputStream file = new FileOutputStream(filePath.toString())) {
             try (ObjectOutputStream out = new ObjectOutputStream(file)) {
@@ -61,7 +66,14 @@ public class FilesystemService<T extends IBookmarkData<T>> extends BookmarkServi
                 return bookmark;
             }
         } catch (IOException ex){
-            throw new RetrievableException(ex);
+            throw new RetryableException(ex);
         }
+    }
+
+    @Override
+    public Bookmark<T> deleteBookmarks(Envelope envelope, Bookmark<T> bookmark) {
+        Path filePath = calculateFilename(envelope, bookmark.getData().getClass());
+        Mono.just(filePath.getParent().toFile()).doOnNext(FileSystemUtils::deleteRecursively).subscribe();
+        return bookmark;
     }
 }

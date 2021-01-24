@@ -16,6 +16,5 @@ public @interface Bookmarkable {
 
     @AliasFor("bookmarkJavaType") Class<?> value() default Serializable.class;
     @AliasFor("value") Class<?> bookmarkJavaType() default Serializable.class;
-    boolean missingBookmarkFailure() default true;
 
 }

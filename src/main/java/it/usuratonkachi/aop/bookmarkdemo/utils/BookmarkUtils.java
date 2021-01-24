@@ -17,9 +17,13 @@ public class BookmarkUtils {
         return className + ":" + methodName;
     }
 
-    public Bookmarkable getBookmarkAnnnotation(ProceedingJoinPoint joinPoint) {
+    public Bookmarkable getBookmarkAnnotation(ProceedingJoinPoint joinPoint) {
         Method method = ((MethodSignature)joinPoint.getSignature()).getMethod();
         return method.getDeclaredAnnotation(Bookmarkable.class);
+    }
+
+    public String getBookmarkId(String messageId, Class<?> clazz){
+        return String.format("%s_%s", messageId, clazz.getName());
     }
 
 }

@@ -19,17 +19,18 @@ public class Envelope {
     private Map<String, Bookmark<? extends IBookmarkData<?>>> bookmarkDataMap;
 
     public static Envelope factory(String address) {
+        String messageId = UUID.randomUUID().toString();
         return Envelope.builder()
-                .id(UUID.randomUUID().toString())
+                .id(messageId)
                 .address(address)
-                .bookmarkDataMap(BookmapFactory.create())
+                .bookmarkDataMap(BookmapFactory.create(messageId))
                 .build();
     }
 
-    public Bookmark<? extends IBookmarkData<?>> getBookmark(String stepKey) {
+    public Bookmark<? extends IBookmarkData<?>> getBookmark(String getClassName) {
         return Optional.ofNullable(bookmarkDataMap)
-                .map(bookmarkDataMap -> bookmarkDataMap.get(stepKey))
-                .orElseThrow(() -> new RuntimeException("No bookmark found for stepKey " + stepKey));
+                .map(bookmarkDataMap -> bookmarkDataMap.get(getClassName))
+                .orElseThrow(() -> new RuntimeException("No bookmark found for className " + getClassName));
     }
 
 }
